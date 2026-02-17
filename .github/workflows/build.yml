@@ -1,0 +1,56 @@
+name: Build
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "*"
+  pull_request:
+
+jobs:
+  build:
+    name: Build with Ant (JDK 17)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Ant
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ant
+
+      - name: Build with Ant
+        run: ant -f build/build.xml build
+
+      - name: Show build output location
+        run: |
+          echo "BUILD_DIR is configured in build/local.properties as ../JTHarness-build"
+          ls -la ../JTHarness-build || true
+
+      - name: Prepare artifacts for upload
+        run: |
+          mkdir -p artifacts
+          cp ../JTHarness-build/binaries/lib/javatest.jar artifacts/
+          cp ../JTHarness-build/binaries/release artifacts/
+          cp LICENSE artifacts/
+
+      - name: Publish artifacts to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/javatest.jar
+            artifacts/release
+            artifacts/LICENSE
