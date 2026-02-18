@@ -208,6 +208,8 @@ public abstract class Script {
     private boolean jtrIfPassed =
             System.getProperty("javatest.script.jtrIfPassed", "true").equals("true");
 
+    protected int executionNumber = 0;
+
     /**
      * Utility routine to convert an array of filenames to a corresponding
      * array of strings.
@@ -1393,6 +1395,10 @@ public abstract class Script {
      */
     public void setNotifier(Harness.Observer notifier) {
         this.notifier = notifier;
+    }
+
+    protected void setExecutionNumber(int number) {
+        this.executionNumber = number;
     }
 
     /**

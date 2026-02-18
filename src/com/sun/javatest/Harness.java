@@ -29,6 +29,7 @@ package com.sun.javatest;
 import com.sun.javatest.TestResultTable.TreeIterator;
 import com.sun.javatest.httpd.HttpdServer;
 import com.sun.javatest.httpd.RootRegistry;
+import com.sun.javatest.repeat.RepeatMode;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.DynamicArray;
 import com.sun.javatest.util.I18NResourceBundle;
@@ -88,6 +89,9 @@ public class Harness {
     private boolean isBatchRun;
     private boolean stopping;
     public static final String DEBUG_OBSERVER_CLASSNAME_SYS_PROP = "com.sun.javatest.Harness.DEBUG_OBSERVER";
+
+    private RepeatMode repeatMode = RepeatMode.ONCE;
+    private int repeatCount = 100;
 
     {
         Integer i = Integer.getInteger("javatest.autostop.threshold");
@@ -289,6 +293,22 @@ public class Harness {
             //currentResults.removeObserver(trace);
             trace = null;
         }
+    }
+
+    public RepeatMode getRepeatMode() {
+        return repeatMode;
+    }
+
+    public void setRepeatMode(RepeatMode mode) {
+        repeatMode = mode;
+    }
+
+    public int getRepeatCount() {
+        return repeatCount;
+    }
+
+    public void setRepeatCount(int count) {
+        repeatCount = count;
     }
 
     /**
@@ -765,6 +785,8 @@ public class Harness {
         r.setBackupPolicy(backupPolicy);
         r.setEnvironment(env);
         r.setExcludeList(excludeList);
+        r.setRepeatMode(repeatMode);
+        r.setRepeatCount(repeatCount);
 
         int concurrency = params.getConcurrency();
         concurrency = Math.max(1, Math.min(concurrency,

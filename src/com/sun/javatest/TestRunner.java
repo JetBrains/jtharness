@@ -26,6 +26,7 @@
  */
 package com.sun.javatest;
 
+import com.sun.javatest.repeat.RepeatMode;
 import com.sun.javatest.util.BackupPolicy;
 
 import java.util.Iterator;
@@ -45,6 +46,24 @@ public abstract class TestRunner {
     private ExcludeList excludeList;
     private int concurrency;
     private Harness.Observer notifier;
+    private RepeatMode repeatMode;
+    private int repeatCount;
+
+    public RepeatMode getRepeatMode() {
+        return repeatMode;
+    }
+
+    public void setRepeatMode(RepeatMode mode) {
+        repeatMode = mode;
+    }
+
+    public int getRepeatCount() {
+        return repeatCount;
+    }
+
+    public void setRepeatCount(int count) {
+        repeatCount = count;
+    }
 
     /**
      * Get the work directory to be used to store the test results generated

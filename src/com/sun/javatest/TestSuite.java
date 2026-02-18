@@ -797,6 +797,13 @@ public class TestSuite {
         return s;
     }
 
+    public Script createScript(TestDescription td, String[] exclTestCases, TestEnvironment scriptEnv,
+                   WorkDirectory workDir, BackupPolicy backupPolicy, int executionNumber) throws Fault {
+        Script s = createScript(td, exclTestCases, scriptEnv, workDir, backupPolicy);
+        s.setExecutionNumber(executionNumber);
+        return s;
+    }
+
     /**
      * Create a configuration interview that can be used to collection the configuration
      * data for a test run.

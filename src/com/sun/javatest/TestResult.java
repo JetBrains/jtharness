@@ -292,6 +292,7 @@ public class TestResult {
     private int maxTROutputSize = 0;    // maximum output size for this test result
     // only valid when this TR is in a TRT, should remain when shrunk
     private TestResultTable.TreeNode parent;
+    private int executionNumber = 0;
 
     /*
      * @deprecated JTS files no longer supported
@@ -466,15 +467,28 @@ public class TestResult {
      * work directory.  The internal separator is '/'.
      *
      * @param td the test description for the test in question
+     * @param executionNumber the number of the current test execution
      * @return the path name for the results file for a test, relative to the
      * work directory
      */
-    public static String getWorkRelativePath(TestDescription td) {
+    public static String getWorkRelativePath(TestDescription td, int executionNumber) {
         String baseURL = td.getRootRelativePath();
 
         // add in uniquifying id if
         String id = td.getParameter("id");
-        return getWorkRelativePath(baseURL, id);
+        return getWorkRelativePath(baseURL, id, executionNumber);
+    }
+
+    /**
+     * Get the path name for the results file for a test, relative to the
+     * work directory.  The internal separator is '/'.
+     *
+     * @param td the test description for the test in question
+     * @return the path name for the results file for a test, relative to the
+     * work directory
+     */
+    public static String getWorkRelativePath(TestDescription td) {
+        return getWorkRelativePath(td, 0);
     }
 
     /**
@@ -506,6 +520,20 @@ public class TestResult {
      * given URL is null.
      */
     public static String getWorkRelativePath(String baseURL, String testId) {
+        return getWorkRelativePath(baseURL, testId, 0);
+    }
+
+    /**
+     * Get the path name for the results file for a test, relative to the
+     * work directory.  The internal separator is '/'.
+     *
+     * @param baseURL May not be null;
+     * @param testId  The test identifier that goes with the URL.  This may be null.
+     * @param executionNumber The number of test execution of that test
+     * @return The work relative path of the JTR for this test.  Null if the
+     * given URL is null.
+     */
+    public static String getWorkRelativePath(String baseURL, String testId, int executionNumber) {
         StringBuilder sb = new StringBuilder(baseURL);
 
         // strip off extension
@@ -524,6 +552,11 @@ public class TestResult {
         if (testId != null) {
             sb.append('_');
             sb.append(testId);
+        }
+
+        if (executionNumber != 0) {
+            sb.append("-run-");
+            sb.append(executionNumber);
         }
 
         sb.append(EXTN);
@@ -1145,7 +1178,7 @@ public class TestResult {
             props = emptyStringArray;
         }
 
-        String wrp = getWorkRelativePath(desc).replace('/', File.separatorChar);
+        String wrp = getWorkRelativePath(desc, executionNumber).replace('/', File.separatorChar);
         resultsFile = workDir.getFile(wrp);
 
         File resultsDir = resultsFile.getParentFile();
@@ -2177,6 +2210,16 @@ public class TestResult {
             super(out);
             lock = theLock;
         }
+    }
+
+    public int getExecutionNumber() {
+        return executionNumber;
+    }
+
+    public void setExecutionNumber(int number, WorkDirectory workDir) {
+        executionNumber = number;
+        String wrp = getWorkRelativePath(desc, executionNumber).replace('/', File.separatorChar);
+        resultsFile = workDir.getFile(wrp);
     }
 
     /**

@@ -26,6 +26,7 @@
  */
 package com.sun.javatest;
 
+import com.sun.javatest.repeat.RepeatMode;
 import com.sun.javatest.util.BackupPolicy;
 import com.sun.javatest.util.I18NResourceBundle;
 
@@ -157,7 +158,7 @@ public class DefaultTestRunner extends TestRunner {
         }
     }
 
-    protected boolean runTest(TestDescription td) {
+    protected Status runTestOnce(TestDescription td, int executionNumber) {
         WorkDirectory workDir = getWorkDirectory();
         TestResult result = null;
 
@@ -169,7 +170,14 @@ public class DefaultTestRunner extends TestRunner {
             BackupPolicy backupPolicy = getBackupPolicy();
 
             String[] exclTestCases = getExcludedTestCases(td);
+
             Script s = testSuite.createScript(td, exclTestCases, env.copy(), workDir, backupPolicy);
+            if (executionNumber != 0) {
+                s.getTestResult().setExecutionNumber(executionNumber, workDir);
+                s.getTestResult().putProperty("repeatMode", getRepeatMode().name());
+                s.getTestResult().putProperty("executionNumber", String.valueOf(executionNumber));
+                s.getTestResult().putProperty("maxRepeatCount", String.valueOf(getRepeatCount()));
+            }
 
             scriptUsesNotifier = s.useNotifier();
             if (!scriptUsesNotifier) {
@@ -181,6 +189,7 @@ public class DefaultTestRunner extends TestRunner {
             result = s.getTestResult();
 
             s.run();
+
         } catch (ThreadDeath e) {
             String url = td.getRootRelativeURL();
             workDir.log(i18n, "dtr.threadKilled", url);
@@ -214,7 +223,26 @@ public class DefaultTestRunner extends TestRunner {
             }
         }
 
-        return result.getStatus().getType() == Status.PASSED;
+        return result.getStatus();
+    }
+
+    protected boolean runTest(TestDescription td) {
+        if (getRepeatMode().equals(RepeatMode.ONCE)) {
+            return runTestOnce(td, 0).getType() == Status.PASSED;
+        } else {
+            boolean isPassed = true;
+            for (int executionNumber = 1; executionNumber <= getRepeatCount(); executionNumber++) {
+                Status currentStatus = runTestOnce(td, executionNumber);
+                isPassed = isPassed && currentStatus.isPassed();
+
+                boolean passCondition = (getRepeatMode().equals(RepeatMode.UNTIL_SUCCESS) && currentStatus.isPassed());
+                boolean failCondition = (getRepeatMode().equals(RepeatMode.UNTIL_FAILURE) && (!currentStatus.isPassed()));
+                if (passCondition || failCondition) {
+                    return false;
+                }
+            }
+            return isPassed;
+        }
     }
 
     private TestResult createErrorResult(TestDescription td, String reason, Throwable t) { // make more i18n
