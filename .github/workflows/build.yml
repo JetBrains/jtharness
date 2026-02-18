@@ -45,6 +45,7 @@ jobs:
           cp ../JTHarness-build/binaries/lib/javatest.jar artifacts/
           cp ../JTHarness-build/binaries/release artifacts/
           cp LICENSE artifacts/
+          cp legal/copyright.txt artifacts/
 
       - name: Publish artifacts to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -54,3 +55,5 @@ jobs:
             artifacts/javatest.jar
             artifacts/release
             artifacts/LICENSE
+            artifacts/copyright.txt
+
